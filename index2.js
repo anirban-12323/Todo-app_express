@@ -1,6 +1,6 @@
-// async function addTodo(){
+//async function getTodo(){
 //   let res=await fetch("http://localhost:3000/todos",{
-//     method:"POST",
+//     method:"GET",
 //     headers: {
 //       "Content-Type": "application/json",  // ✅ this line is essential
 //     },
@@ -12,4 +12,18 @@
 //   let json=await res.json()
 //   console.log(json)
 // }
-// addTodo()
+// getTodo()
+
+async function getTodo(){
+  let body={
+    method:"GET",
+    headers: {
+      "Content-Type": "application/json",  // ✅ this line is essential
+     }
+  }
+  let res=await fetch("http://localhost:3000/todos",body)
+  let json=await res.json()
+  console.log(json)
+  
+}
+getTodo()

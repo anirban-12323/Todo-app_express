@@ -35,11 +35,12 @@ app.post("/todos",(req,res)=>{
   try {
   //  const{title,description}=req.body
   // // console.log(req.body)
-  //  
-  //  
+  const {userid}=req.headers
+  
+  
   fs.readFile(__dirname+"/todos.json",{encoding:"utf-8"},(error,todos)=>{
     todos=todos?JSON.parse(todos):[]
-    todos.push({...req.body,isChecked:false,id:todos.length + 1})
+    todos.push({...req.body,isChecked:false,id:todos.length + 1,userid})
     fs.writeFile(__dirname+"/todos.json",JSON.stringify(todos),{encoding:"utf-8"},(err)=>{
       if(err){
         return res.status(500).json({"message":"Please try again"})
@@ -61,9 +62,11 @@ app.post("/todos",(req,res)=>{
 
 
 app.get("/todos",(req,res)=>{
+  const {userid}=req.headers
   try {
     fs.readFile(__dirname+"/todos.json",{encoding:"utf-8"},(error,todos)=>{
       todos=todos?JSON.parse(todos):[]
+      todos=todos.filter(todo=>userid==todo.userid)
 
       return  res.status(200).json({todos})
     })
@@ -77,12 +80,32 @@ app.get("/todos",(req,res)=>{
 
 
 
+
 app.delete("/todos/:id",(req,res)=>{
+  const {userid}=req.headers
+  if(!userid){
+    return res.json({message:"You are not logged in"})
+  }
   try {
-    fs.readFile(__dirname+"/todos.json",{encoding:"utf-8"},(error,todos)=>{
-    todos=todos?JSON.parse(todos):[]
+    fs.readFile(__dirname+"/todos.json",{encoding:"utf-8"},(error,data)=>{
+      let todos=[]
+      try {
+        todos=data?JSON.parse(data):[]
+        
+      } catch (error) {
+        return res.status(500).json({ message: "Invalid JSON in todos file" });
+        
+      }
+    
     const id=Number(req.params.id)
-     todos=todos.filter(todo=>todo.id!==id)
+     //todos=todos.filter(todo=>todo.id!==id)
+     const todoIndex=todos.findIndex(todo=>todo.id===id && todo.userid===userid)
+     if(todoIndex===-1){
+      return res.status(404).json({message:"Todo not found or unauthorized"})
+     }
+
+     //REMOVE THAT TODO
+     todos.splice(todoIndex,1)
     fs.writeFile(__dirname+"/todos.json",JSON.stringify(todos),{encoding:"utf-8"},(err)=>{
       if(err){
         return res.status(500).json({"message":"Please try again"})
@@ -103,7 +126,6 @@ app.delete("/todos/:id",(req,res)=>{
     
   }
 })
-
 app.put("/todos/:id",(req,res)=>{
   try {
      fs.readFile(__dirname+"/todos.json",{encoding:"utf-8"},(error,todos)=>{
